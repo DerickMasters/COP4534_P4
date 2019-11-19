@@ -1,215 +1,183 @@
 //-----------------------------------------------
 // Derick Masters
 // COP4534_Data_Structures
-// GenBatchDataSet.cpp
+// BatchMonteCarlo.cpp
 //
 // This file will define the class in 
-// GenBatchDataSet.hpp
+// BatchMonteCarlo.hpp
 //
 // ----------------------------------------------
 
-#include"GenBatchDataSet.hpp"
+#include"BatchMonteCarlo.hpp"
 
 /*****************************************************
- * GenBatchDataSet Default Constructor
+ * BatchMOnteCarlo Default Constructor
 *****************************************************/
-GenBatchDataSet::GenBatchDataSet()
+BatchMonteCarlo::BatchMonteCarlo()
 {
 	this->numBatches = 0;
 	this->numItems = 0;
 	this->pBadBatches = 0;
 	this->pBadItems = 0;
 	this->numSampled = 0;
-	this->rngB = nullptr;
-	this->rngI = new RngGen(0, 99);
+	this->rng = nullptr;
 }
 
 /*****************************************************
- * GenBatchDataSet Destructor
+ * BatchMonteCarlo Destructor
 *****************************************************/
-GenBatchDataSet::~GenBatchDataSet()
+BatchMonteCarlo::~BatchMonteCarlo()
 {
-	delete this->rngB;
-	delete this->rngI;
+	delete this->rng;
+	for(std::vector<std::vector<char>*>::size_type i = 0; i < this->batchData.size(); i++)
+	{
+		delete this->batchData.at(i);
+	}
+
 }
 
 /*****************************************************
- * ReadSpecs
+ * ProcessBatchData
  *
- * method to read in a test file and create a data
- * set depending on the contents of the test file
+ * method to read in spec File and analyze data set
  *
  * Params : std::string specFileName
  * Returns : void
 *****************************************************/
-void GenBatchDataSet::ReadSpecs(std::string specFileName)
+void BatchMonteCarlo::ProcessBatchData(std::string specFileName)
 {
 //Open spec file
 	std::ifstream specFile;
 	specFile.open(specFileName, std::ifstream::in);
 //Retrieve specs
+	this->numBatches = 0;
+	this->numItems = 0;
+	this->pBadBatches = 0;
+	this->pBadItems = 0;
+	this->numSampled = 0;
+
 	specFile >> this->numBatches;
 	specFile >> this->numItems;
 	specFile >> this->pBadBatches;
 	specFile >> this->pBadItems;
-	specFIle >> this->numSampled;
+	specFile >> this->numSampled;
 //Initialize RngGen with spec data
-	this->rngB = new RngGen(0, this->numBatches)
+	this->rng = new RngGen(0, this->numBatches-1);
 //Close spec file
 	specFile.close();
-}
+//Analyze batches from dataset
 
-/*****************************************************
- * ProduceData
- *
- * method to create data set depending on spec file
- *
- * Params : N/A
- * Returns : void
-*****************************************************/
-void GenBatchDataSet::ProduceData()
-{
-//Determine randomly which batches are bad
-	for(unsigned int i = 0; i < this->pBadBatches; i++)
+	for(int i = 0; i < this->numBatches; i++)
 	{
-	//Variable to flag non unique index
-		bool unique;
-	//Generate random number for index
-		int buffer = this->rngB->GetRngNum();
-		do
-		{
-		//Check if random number index is already included in vector
-			unique = true;
-			for(unsigned int j = 0; j < this->badBatches.size(); j++)
-			{
-				if(this->badBatches.at(j) == buffer)
-				{
-					buffer = this->rngB->GetRngNum();
-					unique = false;
-					break;
-				}
-			}
+	//Retrieve batch data from data file
+		std::ifstream batchDataFile;
+		batchDataFile.open(("ds" + std::to_string(i+1) + ".txt").c_str(), std::ifstream::in);
+		std::vector<char>* batch = new std::vector<char>();
 
-		}while(!unique);
-	//Add unique index to vector
-		this->badBatches.push_back(buffer);
-	}	
-//Loop to create each set of batch data
-	for(unsigned int i = 0; i < this->numBatches; i++)
-	{
-	//Variable to flag bad batch
-		bool bad;
-	//Open output file to write to
-		std::ifstream outFile;
-		outFile.open("ds" + std::to_string(i+1) + ".txt", std::ifstream::out);
-	//Check if batch is bad
-		for(unsigned int j = 0; j < this->badBatches.size(); j++)
+		for(int j = 0; j < this->numItems; j++)
 		{
-			bad = false;
-			if(i == this->badBatches.at(j))
+			char tempChar;
+			batchDataFile >> tempChar;
+			batch->push_back(tempChar);
+		}
+
+		this->batchData.push_back(batch);
+	//close batch data file
+		batchDataFile.close();
+	//Sample Batches
+
+
+		for(int k = 0; k < this->numSampled; k++)
+		{
+		//Vector to hold which indecies to sample
+			std::vector<int> sampleIndexes;
+		//Variable to flag non unique index
+			bool unique;
+		//Generate random number for sample
+			int buffer = this->rng->GetRngNum();
+			do
 			{
-				bad = true;	
+			//Check if random number index is already included in vector
+				unique = true;
+					for(std::vector<int>::size_type l = 0; l < sampleIndexes.size(); l++)
+					{
+						if(sampleIndexes.at(l) == buffer)
+						{
+							buffer = this->rng->GetRngNum();
+							unique = false;
+						}
+					}
+			}while(!unique);
+		//Add unique index to vector
+			sampleIndexes.push_back(buffer);
+		//Check if good or bad item
+			if(this->batchData.back()->at(buffer) == 'b')
+			{
+				this->batchResults.push_back("batch #" + std::to_string(i+1) + " is bad");
 				break;
 			}
 		}
-	//If batch good write all good items
-		if(!bad)
-		{
-			for(unsigned int l = 0; l < this->numItems; l++)
-			{
-				outFile << 'g' << "\n";
-			}
-		}
-	//If bad determine bad items
-		else
-		{
-			for(unsigned int k = 0; k < this->numItems; k++)
-			{
-				outFile << GetItem(this->pBadItems) << "\n";
-			}
-
-		}
-		outFile.close();
 	}
-	
 }
 
 /*****************************************************
- * PrintSpecs
+ * PrintDataSetResults
  *
- * method print specs to console
+ * method to print results of analysis to console
  *
  * Params : N/A
  * Returns : void
 *****************************************************/
-void GenBatchDataSet::PrintSpecs()
-{
-//Output specs to console
-	std::cout << "Number of batches of items:                      " << this->numBatches << std::endl;
-	std::cout << "Number of items in each batch:                   " << this->numItems << std::endl;
-	std::cout << "Percentage of batches containing bad items:      " << this->pBadBatches << "%" << std::endl;
-	std::cout << "Percentage of Items that are bad in a bad batch: " << this->pBadItems << "%" << std::endl;
-	std::cout << "Items sampled from each set:                     " << this->numSampled << std::endl << std::endl;		
+void BatchMonteCarlo::PrintDataSetResults()
+{	
+	std::cout << "Analyzing Batch Data:" << std::endl;
+	for(std::vector<std::string>::size_type i = 0; i < this->batchResults.size(); i++)
+	{
+		std::cout << this->batchResults.at(i) << std::endl;
+	}
+	double p = (1 - (this->pBadItems/100.0));
+	int n = this->numSampled;
+	std::cout << "Base = " << p << " Exponent = " << n << std::endl;
+	std::cout << "P(failure to detect bad batch) = " << CalcPercentProbFail(p, n) << std::endl;
+	std::cout << "Percentage of bad batches actually detected = " << std::setw(3) <<std::setprecision(4) << CalcPercentTrueDetect(batchResults.size(), (this->pBadBatches * this->numBatches * 1.0) / 100.0) << "%" << std::endl << std::endl;
+	this->batchResults.clear();
+
+
 }
 
 /*****************************************************
- * PrintData
+ * CalcPercentProbFail
  *
- * method to print bad batches to console
+ * helper method to calculate the probability of failure to
+ * detect if a batch is bad
  *
- * Params : N/A
- * Returns : void
+ * Params : double p, int n
+ * Returns : double
 *****************************************************/
-void GenBatchDataSet::PrintData()
+double BatchMonteCarlo::CalcPercentProbFail(double p, int n)
 {
-	for(unsigned int i = 0; i < this->badBatches.size(); i++)
+	double product = 1;
+	for(int i = 0; i < n; i++)
 	{
-	//Variable to count how many items are bad in batch
-		int numBad = 0
-	//open bad batch file
-		std::ifstream batchFile;
-		batchFile.open("ds" + std::sto_string(this->badBatches.at(i)) + ".txt", std::ifstream::in);
-	//Print Data to console
-		for(unsigned int j = 0; j < this->numItems; j++)
-		{
-		//Count number of bad items in batch
-			char buffer;
-			batchFile >> buffer;
-			if(buffer == 'b')
-			{
-				numBad++;
-			}
-		}
-	//Print data
-		std::cout << "Create bad batch # " << std::setw(3) << this->badBatches.at(i)
-			  << ", totBad = " << numBad
-			  << ", total = " << this->numItems
-			  << ", badpct = " << this->pBadItems << std::endl;
-	//Close bad batch file
-		batchFile.close();	
+		product = product * p;
 	}
-//Print total bad sets
-	std::cout << "Total bad batches = " << this->badBatches.size() << std::endl;	
+	return product;
 }
 
 /*****************************************************
- * GetItem
+ * CalcPercentTrueDetect
  *
- * helper method to produce an item depending on the
- * percent of bad items specified
+ * helper method to determine how many of the bad
+ * batches were actually detected
  *
- * Params : int pBadItems
- * Returns : char
+ * Params : int detect, int total
+ * Returns : double
 *****************************************************/
-char GenBatchDataSet::GetItem(int pBadItems)
+double BatchMonteCarlo::CalcPercentTrueDetect(int detect, int total)
 {
-	if(this->rngI->GetRngNum() <= pBadItems)
-	{
-		return 'b';
-	}
-	else
-	{
-		return 'g';
-	}
+	double product;
+	product = ((detect * 1.0)/total) * 100.0;
+	return product;	
 }
+
 

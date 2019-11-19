@@ -1,215 +1,111 @@
 //-----------------------------------------------
 // Derick Masters
 // COP4534_Data_Structures
-// GenBatchDataSet.cpp
+// GenBacteriaDataSet.cpp
 //
 // This file will define the class in 
-// GenBatchDataSet.hpp
+// GenBacteriaDataSet.hpp
 //
 // ----------------------------------------------
 
-#include"GenBatchDataSet.hpp"
+#include"GenBacteriaDataSet.hpp"
 
 /*****************************************************
- * GenBatchDataSet Default Constructor
+ * GenBacteriaDataSet Default Constructor
 *****************************************************/
-GenBatchDataSet::GenBatchDataSet()
+GenBacteriaDataSet::GenBacteriaDataSet()
 {
-	this->numBatches = 0;
-	this->numItems = 0;
-	this->pBadBatches = 0;
-	this->pBadItems = 0;
-	this->numSampled = 0;
-	this->rngB = nullptr;
-	this->rngI = new RngGen(0, 99);
+	this->numDays = 0;
+	this->numCategories = 0;
+	this->rngR = new RngGen(2, 6);
+	this->rngO = nullptr;
 }
 
 /*****************************************************
- * GenBatchDataSet Destructor
+ * GenBacteriaDataSet Destructor
 *****************************************************/
-GenBatchDataSet::~GenBatchDataSet()
+GenBacteriaDataSet::~GenBacteriaDataSet()
 {
-	delete this->rngB;
-	delete this->rngI;
-}
-
-/*****************************************************
- * ReadSpecs
- *
- * method to read in a test file and create a data
- * set depending on the contents of the test file
- *
- * Params : std::string specFileName
- * Returns : void
-*****************************************************/
-void GenBatchDataSet::ReadSpecs(std::string specFileName)
-{
-//Open spec file
-	std::ifstream specFile;
-	specFile.open(specFileName, std::ifstream::in);
-//Retrieve specs
-	specFile >> this->numBatches;
-	specFile >> this->numItems;
-	specFile >> this->pBadBatches;
-	specFile >> this->pBadItems;
-	specFIle >> this->numSampled;
-//Initialize RngGen with spec data
-	this->rngB = new RngGen(0, this->numBatches)
-//Close spec file
-	specFile.close();
+	delete this->rngR;
+	delete this->rngO;
 }
 
 /*****************************************************
  * ProduceData
  *
- * method to create data set depending on spec file
+ * method to create bacteria data set
  *
- * Params : N/A
+ * Params : int numDays, int numCategories, std::string dataFileName
  * Returns : void
 *****************************************************/
-void GenBatchDataSet::ProduceData()
+void GenBacteriaDataSet::ProduceData(int numDays, int numCategories, std::string dataFileName)
 {
-//Determine randomly which batches are bad
-	for(unsigned int i = 0; i < this->pBadBatches; i++)
+//Save specs
+	this->numDays = numDays;
+	this->numCategories = numCategories;
+//Open output data file
+	std::ofstream dataFile;
+	dataFile.open(dataFileName, std::ofstream::out);
+//Variable to hold max of previous category
+	int prevCat = 0;
+//Initialize Rng generator for Occurances
+	this->rngO = new RngGen(0, numCategories-1);
+//Produce Occurances of each category
+	std::vector<int> tempOccurrences(numCategories, 0);
+	for(int i = 0; i < numDays; i++)
 	{
-	//Variable to flag non unique index
-		bool unique;
-	//Generate random number for index
-		int buffer = this->rngB->GetRngNum();
-		do
-		{
-		//Check if random number index is already included in vector
-			unique = true;
-			for(unsigned int j = 0; j < this->badBatches.size(); j++)
-			{
-				if(this->badBatches.at(j) == buffer)
-				{
-					buffer = this->rngB->GetRngNum();
-					unique = false;
-					break;
-				}
-			}
-
-		}while(!unique);
-	//Add unique index to vector
-		this->badBatches.push_back(buffer);
-	}	
-//Loop to create each set of batch data
-	for(unsigned int i = 0; i < this->numBatches; i++)
-	{
-	//Variable to flag bad batch
-		bool bad;
-	//Open output file to write to
-		std::ifstream outFile;
-		outFile.open("ds" + std::to_string(i+1) + ".txt", std::ifstream::out);
-	//Check if batch is bad
-		for(unsigned int j = 0; j < this->badBatches.size(); j++)
-		{
-			bad = false;
-			if(i == this->badBatches.at(j))
-			{
-				bad = true;	
-				break;
-			}
-		}
-	//If batch good write all good items
-		if(!bad)
-		{
-			for(unsigned int l = 0; l < this->numItems; l++)
-			{
-				outFile << 'g' << "\n";
-			}
-		}
-	//If bad determine bad items
-		else
-		{
-			for(unsigned int k = 0; k < this->numItems; k++)
-			{
-				outFile << GetItem(this->pBadItems) << "\n";
-			}
-
-		}
-		outFile.close();
+		int tempIndex = this->rngO->GetRngNum();
+		tempOccurrences.at(tempIndex)++;
 	}
-	
+//Produce data
+	dataFile << numDays << "\n";
+	dataFile << numCategories << "\n";
+	for(int j = 0; j < numCategories; j++)
+	{
+		std::string tempCat;
+		int tempMax = this->rngR->GetRngNum()*1000;
+		int tempOccures = tempOccurrences.at(j);
+		tempCat = std::to_string(prevCat) + "-" + std::to_string(prevCat+tempMax) + ":" + std::to_string(tempOccures);
+		dataFile << tempCat << "\n";
+		this->categories.push_back(tempCat);
+		prevCat += tempMax;
+	}
+	dataFile << "ml" << "\n";
+		
+//Close data file
+	dataFile.close();
 }
 
 /*****************************************************
  * PrintSpecs
  *
- * method print specs to console
+ * method to prit to console specifications of 
+ * data set
  *
  * Params : N/A
  * Returns : void
 *****************************************************/
-void GenBatchDataSet::PrintSpecs()
-{
-//Output specs to console
-	std::cout << "Number of batches of items:                      " << this->numBatches << std::endl;
-	std::cout << "Number of items in each batch:                   " << this->numItems << std::endl;
-	std::cout << "Percentage of batches containing bad items:      " << this->pBadBatches << "%" << std::endl;
-	std::cout << "Percentage of Items that are bad in a bad batch: " << this->pBadItems << "%" << std::endl;
-	std::cout << "Items sampled from each set:                     " << this->numSampled << std::endl << std::endl;		
+void GenBacteriaDataSet::PrintSpecs()
+{		
+	std::cout << "Simulated days: " << this->numDays << std::endl;
+	std::cout << "Number of categories: " << this->numCategories << std::endl;
 }
 
 /*****************************************************
  * PrintData
  *
- * method to print bad batches to console
+ * method print data to console
  *
  * Params : N/A
  * Returns : void
 *****************************************************/
-void GenBatchDataSet::PrintData()
+void GenBacteriaDataSet::PrintData()
 {
-	for(unsigned int i = 0; i < this->badBatches.size(); i++)
+	std::cout << "Ranges and occurrences in each range: " << std::endl;
+	for(std::vector<std::string>::size_type i = 0; i < this->categories.size(); i++)
 	{
-	//Variable to count how many items are bad in batch
-		int numBad = 0
-	//open bad batch file
-		std::ifstream batchFile;
-		batchFile.open("ds" + std::sto_string(this->badBatches.at(i)) + ".txt", std::ifstream::in);
-	//Print Data to console
-		for(unsigned int j = 0; j < this->numItems; j++)
-		{
-		//Count number of bad items in batch
-			char buffer;
-			batchFile >> buffer;
-			if(buffer == 'b')
-			{
-				numBad++;
-			}
-		}
-	//Print data
-		std::cout << "Create bad batch # " << std::setw(3) << this->badBatches.at(i)
-			  << ", totBad = " << numBad
-			  << ", total = " << this->numItems
-			  << ", badpct = " << this->pBadItems << std::endl;
-	//Close bad batch file
-		batchFile.close();	
-	}
-//Print total bad sets
-	std::cout << "Total bad batches = " << this->badBatches.size() << std::endl;	
-}
-
-/*****************************************************
- * GetItem
- *
- * helper method to produce an item depending on the
- * percent of bad items specified
- *
- * Params : int pBadItems
- * Returns : char
-*****************************************************/
-char GenBatchDataSet::GetItem(int pBadItems)
-{
-	if(this->rngI->GetRngNum() <= pBadItems)
-	{
-		return 'b';
-	}
-	else
-	{
-		return 'g';
-	}
+		std::cout << categories.at(i) << std::endl;
+	}	
+	std::cout << "Units of measure: ml" << std::endl;
 }
 

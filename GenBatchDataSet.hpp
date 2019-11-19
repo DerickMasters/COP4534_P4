@@ -34,6 +34,20 @@
 
 #endif
 
+#ifndef STRING
+#define STRING
+
+#include<string>
+
+#endif
+
+#ifndef IOMANIP
+#define IOMANIP
+
+#include<iomanip>
+
+#endif
+
 class GenBatchDataSet
 {
 	public:
@@ -46,7 +60,7 @@ class GenBatchDataSet
 		void PrintData();	
 
 	private:	
-		void GetItem();
+		char GetItem(int pBadItems);
 		int numBatches;
 		int numItems;
 		int pBadBatches;

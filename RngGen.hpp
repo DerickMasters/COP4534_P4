@@ -16,6 +16,7 @@
 class RngGen
 {
 	public:
+		RngGen();
 		RngGen(int min, int max);
 		
 		int GetRngNum();
@@ -26,5 +27,6 @@ class RngGen
 		int max;
 		std::mt19937 rng;
 		std::uniform_int_distribution<int> dis;
+};
 
 #endif

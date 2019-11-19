@@ -1,18 +1,19 @@
 //-----------------------------------------------
 // Derick Masters
 // COP4534_Data_Structures
-// Tour.hpp
+// BacteriaMonteCarlo.hpp
 //
-// This file will declare the aspects of the
-// Tour object that will be a sequence of 
-// CityRoutes 
+// This file will utilize a Monte Carlo algorithm
+// to analyze historical readings of bacteria
+// populations to predict the expected 
+// bacterial reading
 //
 // ----------------------------------------------
 
-#ifndef TOUR
-#define TOUR
+#ifndef BACTERIAMONTECARLO
+#define BACTERIAMONTECARLO
 
-#include"Matrix.hpp"
+#include"RngGen.hpp"
 
 #ifndef VECTOR
 #define VECTOR
@@ -21,25 +22,62 @@
 
 #endif
 
-class Tour
+#ifndef FSTREAM
+#define FSTREAM
+
+#include<fstream>
+
+#endif
+
+#ifndef IOSTREAM
+#define IOSTREAM
+
+#include<iostream> //TEST
+
+#endif
+
+#ifndef IOMANIP
+#define IOMANIP
+
+#include<iomanip>
+
+#endif
+
+#ifndef SSTREAM
+#define SSTREAM
+
+#include<sstream>
+
+#endif
+
+class BacteriaMonteCarlo
 {
 	public:
-		Tour();
-		Tour(Matrix refMatrix);
-		Tour(const Tour& tourCopy);
-		~Tour();
+		BacteriaMonteCarlo();
+		~BacteriaMonteCarlo();
 		
-		double GetCost();
-		int at(int index);
-		void Push_Back(int newCity);
-		int size();
-		void Swap(int source, int target);	
-		void Shuffle();	
+		void ProcessBacteriaData(std::string bacteriaFileName);
+		void PrintBacteriaResults();	
 
-	private:
-		std::vector<int>* path;
-		Matrix* tourMatrix;
-		double cost;
+	private:	
+		double CalcProbOccur(double rangeOccurs);
+		void CalcAnalytic();
+		void Simulate();
+		double str_double(std::string inStr);
+		std::vector<std::vector<double>*> categoryData;
+		int numDays;
+		int numCategories;
+		std::string units;
+		double analyticResult;
+		double simResult;
+		RngGen* rng;
+
+		int rangeMin;
+		int rangeMax;
+		int rangeOccurs;
+		int rangeMean;
+		int probOccur;
+		int cumulativeProb;
 };
 
 #endif

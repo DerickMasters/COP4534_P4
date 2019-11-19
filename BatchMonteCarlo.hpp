@@ -1,15 +1,17 @@
 //-----------------------------------------------
 // Derick Masters
 // COP4534_Data_Structures
-// GenBatchDataSet.hpp
+// BatchMonteCarlo.hpp
 //
-// This file will process instructions to create
-// a data set of microchip good/bad batches
+// This file will impliment a Monte Carlo
+// algorithm to analyze micro chips to determine
+// if a batch contains bad chips and the 
+// confidence factor of that decision
 //
 // ----------------------------------------------
 
-#ifndef GENBATCHDATASET
-#define GENBATCHDATASET
+#ifndef BATCHMONTECARLO
+#define BATCHMONTECARLO
 
 #include"RngGen.hpp"
 
@@ -34,27 +36,40 @@
 
 #endif
 
-class GenBatchDataSet
+#ifndef IOMANIP
+#define IOMANIP
+
+#include<iomanip>
+
+#endif
+
+#ifndef STRING
+#define STRING
+
+#include<string>
+
+#endif
+
+class BatchMonteCarlo
 {
 	public:
-		GenBatchDataSet();
-		~GenBatchDataSet();
+		BatchMonteCarlo();
+		~BatchMonteCarlo();
 		
-		void ReadSpecs(std::string specFileName);
-		void ProduceData();
-		void PrintSpecs();
-		void PrintData();	
+		void ProcessBatchData(std::string specFileName);
+		void PrintDataSetResults();
 
 	private:	
-		void GetItem();
+		double CalcPercentProbFail(double p, int n);
+		double CalcPercentTrueDetect(int detect, int total);
 		int numBatches;
 		int numItems;
 		int pBadBatches;
 		int pBadItems;
 		int numSampled;
-		RngGen* rngB;
-		RngGen* rngI;
-		std::vector<int> badBatches;
+		RngGen* rng;
+		std::vector<std::vector<char>*> batchData;
+		std::vector<std::string> batchResults;
 };
 
 #endif

@@ -39,8 +39,9 @@ int main()
 	BacteriaMonteCarlo* BacteriaMC = new BacteriaMonteCarlo();
 
 //Perform Batch Analysis
-	for(unsigned int i = 0; i < testFileNames.size(); i++)
+	for(std::vector<std::string>::size_type i = 0; i < testFileNames.size(); i++)
 	{
+		std::cout << "--------------------------------------------------------------------------" << std::endl;
 		std::cout << "Simulation " << (i+1) << ":" << std::endl;
 	//Generate Batch Data Set
 		gBatchDS->ReadSpecs(testFileNames.at(i));
@@ -49,9 +50,9 @@ int main()
 		gBatchDS->PrintData();
 	//Analyze Batches From Data Set
 		BatchMC->ProcessBatchData(testFileNames.at(i));
-		BatchMC->PrintSpecs();
 		BatchMC->PrintDataSetResults();
-		std::cout << "End Simulation " << (i+1) << std::endl << std::endl;	
+		std::cout << "--------------------------------------------------------------------------" << std::endl;
+		std::cout << std::endl;	
 	}	
 
 //Perform Bacteria Analysis

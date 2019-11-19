@@ -1,15 +1,16 @@
 //-----------------------------------------------
 // Derick Masters
 // COP4534_Data_Structures
-// GenBatchDataSet.hpp
+// GenBacteriaDataSet.hpp
 //
 // This file will process instructions to create
-// a data set of microchip good/bad batches
+// a data set of bacteria population range 
+// occurances
 //
 // ----------------------------------------------
 
-#ifndef GENBATCHDATASET
-#define GENBATCHDATASET
+#ifndef GENBACTERIADATASET
+#define GENBACTERIADATASET
 
 #include"RngGen.hpp"
 
@@ -34,27 +35,36 @@
 
 #endif
 
-class GenBatchDataSet
+#ifndef STRING
+#define STRING
+
+#include<string>
+
+#endif
+
+#ifndef IOMANIP
+#define IOMANIP
+
+#include<iomanip>
+
+#endif
+
+class GenBacteriaDataSet
 {
 	public:
-		GenBatchDataSet();
-		~GenBatchDataSet();
+		GenBacteriaDataSet();
+		~GenBacteriaDataSet();
 		
-		void ReadSpecs(std::string specFileName);
-		void ProduceData();
+		void ProduceData(int numDays, int numCategories, std::string dataFileName);
 		void PrintSpecs();
 		void PrintData();	
 
 	private:	
-		void GetItem();
-		int numBatches;
-		int numItems;
-		int pBadBatches;
-		int pBadItems;
-		int numSampled;
-		RngGen* rngB;
-		RngGen* rngI;
-		std::vector<int> badBatches;
+		std::vector<std::string> categories;
+		int numDays;
+		int numCategories;
+		RngGen* rngR;
+		RngGen* rngO;
 };
 
 #endif
